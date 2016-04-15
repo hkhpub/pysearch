@@ -4,6 +4,7 @@ import urllib2
 from bs4 import BeautifulSoup
 from urlparse import urljoin
 import sqlite3
+import re
 
 # 무시할 단어 목록을 생성함
 ignorewords = set(['the', 'of', 'to', 'and', 'a', 'in', 'is', 'it'])
@@ -30,11 +31,22 @@ class crawler:
 
     # HTML 페이지에서 텍스트 추출함(태그 추출은 안함)
     def gettextonly(self, soup):
-        return None
+        v = soup.string
+        if v is None:
+            c = soup.contents
+            resulttext = ''
+            for t in c:
+                subtext = self.gettextonly(t)
+                resulttext += subtext+'\n'
+            return resulttext
+        else:
+            print v.strip()
+            return v.strip()
 
     # 공백문자가 아닌 문자들로 단어들을 분리함
     def separatewords(self, text):
-        return None
+        splitter = re.compile('\\W*')
+        return [s.lower() for s in splitter.split(text) if s!='']
 
     # 이미 색인한 주소라면 true를 리턴
     def isindexed(self, url):
@@ -88,6 +100,9 @@ class crawler:
         self.conn.execute('create index urlfromidx on link(fromid)')
         self.dbcommit()
 
-
-
         pass
+
+if __name__ == "__main__":
+    crawler = crawler('searchengine.db')
+    pagelist = ['http://www.114114.com']
+    crawler.crawl(pagelist)
